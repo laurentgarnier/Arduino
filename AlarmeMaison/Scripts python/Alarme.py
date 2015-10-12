@@ -13,6 +13,7 @@ from email.MIMEText import MIMEText
 from email.MIMEBase import MIMEBase
 from email.MIMEImage import MIMEImage
 from email import encoders
+from time import sleep
 
 # Horodatage de l'alarme
 dateDeLAlarme = datetime.datetime.now()  # on recupere la date actuelle
@@ -38,6 +39,7 @@ for indexImage in range(10) :
     fichier = open(repertoire + "/Veranda" + "_" + str(timestampDeLAlarme) + "_" + str(indexImage) + ".png", 'w')
     fichier.write(donnees)
     fichier.close()
+    sleep(0.5)
 
 httpServ.close()
 
@@ -67,7 +69,7 @@ mailserver = smtplib.SMTP('smtp.gmail.com', 587)
 mailserver.starttls()
 mailserver.login('lologar69@gmail.com', 'laur*nt2')
 
-listeDestinataires = ["l.garnier@msc-sgcc.com","estelle.crozier@wanadoo.fr"]
+listeDestinataires = ["l.garnier@msc-sgcc.com","ecrozier@wanadoo.fr"]
 # envoi a tous les destinataires
 for destinataire in listeDestinataires :
 	mailserver.sendmail('lologar69@gmail.com', destinataire, msg.as_string())

@@ -16,12 +16,11 @@ void setup() {
 void loop() {
     etat = digitalRead(entreeCapteurOuverture);
     digitalWrite(13, etat);
-    
+
     if(etat == LOW && etat != dernierEtat) {
-        
+
         Process p;
         // Lancement du script python
-        //String cmd = "python /mnt/sda1/arduino/Snapshot2.py";
         p.begin("/usr/bin/python");
         p.addParameter("/mnt/sda1/arduino/Alarme.py");
         p.run();
@@ -29,8 +28,7 @@ void loop() {
     }
     else
         digitalWrite(12, LOW);
- 
-    dernierEtat = etat;
-    
-}
 
+    dernierEtat = etat;
+
+}

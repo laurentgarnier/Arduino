@@ -26,6 +26,7 @@ void loop()
   if(etat != etatPrecedent)
   {
       digitalWrite(LED, etat);
+      // Etat bas pour capteur fermé, donc porte fermée et H quand porte ouverte
       if(etat == LOW)
         msg[0] = 'L';
       else

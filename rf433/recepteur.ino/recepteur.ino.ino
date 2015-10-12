@@ -34,20 +34,18 @@ void loop()
         {
             int i;
             String msg;
-            Serial.print("RX : ");
             // On affiche le message
-            for (i = 0; i < buflen; i++)
-            {
-              Serial.print(buf[i]);
+            for (i = 0; i < buflen; i++)              
               msg += buf[i];
-            }
+          
+            Serial.print("Reception : " + msg);
 
             // Une fois qu'il est entier, on peut ajouter un retour à la ligne.
             Serial.println("");
 
             // on traite le message
             int etat;
-            if( msg.toInt() > 1)
+            if( msg.toInt() == 76)
               etat = LOW;
             else
               etat = HIGH;
