@@ -1,53 +1,60 @@
 #include <Process.h>
-#include <VirtualWire.h> // On inclue la librairie VirtualWire
 
-#define pinReceptionCapteurVeranda 2
+#define pinCapteurVeranda 2
 
-uint8_t buf[VW_MAX_MESSAGE_LEN]; // Tableau qui va contenir le message recu (de taille maximum VW_MAX_MESSAGE_LEN)
-uint8_t buflen = VW_MAX_MESSAGE_LEN; // Taille maximum du buffer
+int etat;
+int etatPrecedent = LOW;
 
 // initialisation du soft
 void setup()
 {
-    Serial.begin(9600); // Initialisation du port série pour avoir un retour sur le serial monitor
-    Bridge.begin();
-    vw_setup(2400);	// Initialisation de la librairie VirtualWire à 2400 bauds  (maximum de mon module)
-    vw_set_rx_pin(pinReceptionCapteurVeranda);
-    vw_rx_start();      // Activation de la partie réception de la librairie VirtualWire
+  Serial.begin(9600); // Initialisation du port série pour avoir un retour sur le serial monitor
+  Bridge.begin();
+  // Initialisation de l'entree du capteur d'ouverture en pull up
+  pinMode(pinCapteurVeranda, INPUT_PULLUP);
+  // lecture de l'etat actuel du capteur
+  etat = digitalRead(pinCapteurVeranda);
+  // on considere que l'etatPrecedent est l'inverse de l'etat courant
+  etatPrecedent = !etat;
+  // utilisation de la led de debug
+  digitalWrite(13, etat);
 }
 
 // boucle principale
 void loop()
 {
-  // Si on a un message dans le buffer
-  if (vw_have_message())
-  {
-    // On récupère ce qu'on a que ce soit complet ou pas
-    if (vw_get_message(buf, &buflen))
-    {
-      int i;
-      String msg;
-      // On récupère le message
-      for (i = 0; i < buflen; i++)
-        msg += buf[i];
+  etat = digitalRead(pinCapteurVeranda);
+  
+  // si on est à l'etat haut (porte ouverte) et que ce n'est pas l'etat precedent
+  // pour gerer le cas ou la porte reste ouverte, on envoie une seule fois le mail
+  if(etat == HIGH && etat != etatPrecedent)
+    GererOuvertureVeranda();
 
-      // debug
-      Serial.print("Reception : " + msg);
-
-      // Code ascii 72 = H correspond à état haut donc porte ouverte
-      if( msg.toInt() == 72)
-        GererOuvertureVeranda();
-    }
-  }
+  etatPrecedent = etat;
+  digitalWrite(13, LOW);
 }
 
 // Traitement de l'ouverture de la porte de la veranda
 void GererOuvertureVeranda()
 {
+  // utilisation de la led de debug
+  digitalWrite(13, etat);
+  
   Process p;
   // Lancement du script python
   p.begin("/usr/bin/python");
   p.addParameter("/mnt/sda1/arduino/Alarme.py");
   p.run();
+  
+  digitalWrite(13, LOW);
+  delay(500);
+  digitalWrite(13, HIGH);
+    delay(500);
+    digitalWrite(13, LOW);
+  delay(500);
+  digitalWrite(13, HIGH);
+    delay(500);
+    
+    
 
 }
