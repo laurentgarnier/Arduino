@@ -1,9 +1,14 @@
 #include <Process.h>
 
 #define pinCapteurVeranda 2
+#define OUVERT 1
+#define FERME 0
 
 int etat;
 int etatPrecedent = LOW;
+// necessaire car le capteur a 2 etats haut lors du glissé de l'aimant
+int etatDeLaPorte;
+
 
 // initialisation du soft
 void setup()
@@ -16,6 +21,10 @@ void setup()
   etat = digitalRead(pinCapteurVeranda);
   // on considere que l'etatPrecedent est l'inverse de l'etat courant
   etatPrecedent = !etat;
+  
+  // on demarre porte fermee
+  etatDeLaPorte = FERME;
+  
   // utilisation de la led de debug
   digitalWrite(13, etat);
 }
@@ -37,7 +46,19 @@ void loop()
 // Traitement de l'ouverture de la porte de la veranda
 void GererOuvertureVeranda()
 {
-  // utilisation de la led de debug
+  // Si l etat de la porte est deja ouvert, c'est qu'on est sur le second seuil haut du glissé, et c'est 
+  // lors de la fermeture, dans ce cas on ignore. Le second seuil lors de l'ouverture est proche du premier
+  // temporellement donc pas le temps de le détecter puisqu'on est en train de faire les acquisitions et l'envoi du mail
+  if(etatDeLaPorte == OUVERT) 
+  {
+    etatDeLaPorte = FERME;
+    return;
+  }
+  
+  // la porte vient d etre ouverte 
+  etatDeLaPorte = OUVERT;
+  
+  // utilisation de la led de debug pour afficher l etat du capteur
   digitalWrite(13, etat);
   
   Process p;
@@ -45,16 +66,14 @@ void GererOuvertureVeranda()
   p.begin("/usr/bin/python");
   p.addParameter("/mnt/sda1/arduino/Alarme.py");
   p.run();
-  
+
+  // clignotement de debug pour dire que le mail est parti
   digitalWrite(13, LOW);
   delay(500);
   digitalWrite(13, HIGH);
-    delay(500);
-    digitalWrite(13, LOW);
+  delay(500);
+  digitalWrite(13, LOW);
   delay(500);
   digitalWrite(13, HIGH);
-    delay(500);
-    
-    
-
+  delay(500);
 }
