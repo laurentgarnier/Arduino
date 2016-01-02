@@ -1,65 +1,56 @@
 #include <Process.h>
 
 #define pinCapteurVeranda 2
+#define ledDebug 13
 #define OUVERT 1
 #define FERME 0
 
-int etat;
-int etatPrecedent = LOW;
-// necessaire car le capteur a 2 etats haut lors du glissé de l'aimant
-int etatDeLaPorte;
-
+int etat = FERME;
+int etatPrecedent = FERME;
 
 // initialisation du soft
 void setup()
 {
-  Serial.begin(9600); // Initialisation du port série pour avoir un retour sur le serial monitor
+  // Initialisation du port série pour avoir un retour sur le serial monitor
+  Serial.begin(9600); 
+  // initialisation de la communication avec la partie Linux
   Bridge.begin();
+  
   // Initialisation de l'entree du capteur d'ouverture en pull up
   pinMode(pinCapteurVeranda, INPUT_PULLUP);
-  // lecture de l'etat actuel du capteur
-  etat = digitalRead(pinCapteurVeranda);
-  // on considere que l'etatPrecedent est l'inverse de l'etat courant
-  etatPrecedent = !etat;
   
-  // on demarre porte fermee
-  etatDeLaPorte = FERME;
-  
-  // utilisation de la led de debug
-  digitalWrite(13, etat);
+   // utilisation de la led de debug
+  digitalWrite(ledDebug, etat);
 }
 
 // boucle principale
 void loop()
 {
+  // Le changement d'etat de la porte est une opposition entre etat et etatPrecedent
+  // etat = OUVERT et etatPrecedent = FERME alors on vient d'ouvrir la porte
+  // etatPrecedent = OUVERT et  etat = FERME alors on vient de fermer la porte
+  
   etat = digitalRead(pinCapteurVeranda);
   
-  // si on est à l'etat haut (porte ouverte) et que ce n'est pas l'etat precedent
-  // pour gerer le cas ou la porte reste ouverte, on envoie une seule fois le mail
-  if(etat == HIGH && etat != etatPrecedent)
-    GererOuvertureVeranda();
+  // ouverture de la porte, on envoie le mail
+  if(etat == OUVERT && etatPrecedent == FERME)
+  {
+      GererOuvertureVeranda();
+      return;
+  }
 
-  etatPrecedent = etat;
-  digitalWrite(13, LOW);
+  // fermeture de la porte
+  if(etat == FERME && etatPrecedent == OUVERT)
+    etatPrecedent = FERME;
+
+  digitalWrite(ledDebug, LOW);
 }
 
 // Traitement de l'ouverture de la porte de la veranda
 void GererOuvertureVeranda()
 {
-  // Si l etat de la porte est deja ouvert, c'est qu'on est sur le second seuil haut du glissé, et c'est 
-  // lors de la fermeture, dans ce cas on ignore. Le second seuil lors de l'ouverture est proche du premier
-  // temporellement donc pas le temps de le détecter puisqu'on est en train de faire les acquisitions et l'envoi du mail
-  if(etatDeLaPorte == OUVERT) 
-  {
-    etatDeLaPorte = FERME;
-    return;
-  }
-  
-  // la porte vient d etre ouverte 
-  etatDeLaPorte = OUVERT;
-  
   // utilisation de la led de debug pour afficher l etat du capteur
-  digitalWrite(13, etat);
+  digitalWrite(ledDebug, etat);
   
   Process p;
   // Lancement du script python
@@ -67,13 +58,20 @@ void GererOuvertureVeranda()
   p.addParameter("/mnt/sda1/arduino/Alarme.py");
   p.run();
 
-  // clignotement de debug pour dire que le mail est parti
-  digitalWrite(13, LOW);
-  delay(500);
-  digitalWrite(13, HIGH);
-  delay(500);
-  digitalWrite(13, LOW);
-  delay(500);
-  digitalWrite(13, HIGH);
-  delay(500);
+  FaireClignoterLaLEDDeDebug();
+  etatPrecedent = OUVERT;
 }
+
+void FaireClignoterLaLEDDeDebug()
+{
+  int etatLED = HIGH;
+  
+  for(int index = 0; index < 5; index++)
+  {
+    // clignotement de debug pour dire que le mail est parti
+    digitalWrite(ledDebug, !etatLED);
+    delay(500);
+  }
+}
+
+
