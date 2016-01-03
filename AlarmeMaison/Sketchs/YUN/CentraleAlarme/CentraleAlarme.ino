@@ -57,9 +57,10 @@ void GererOuvertureVeranda()
   p.begin("/usr/bin/python");
   p.addParameter("/mnt/sda1/arduino/Alarme.py");
   p.run();
-
-  FaireClignoterLaLEDDeDebug();
+  // je considère la porte ouverte lorsque le mail a été envoyé
   etatPrecedent = OUVERT;
+  
+  FaireClignoterLaLEDDeDebug();
 }
 
 void FaireClignoterLaLEDDeDebug()
