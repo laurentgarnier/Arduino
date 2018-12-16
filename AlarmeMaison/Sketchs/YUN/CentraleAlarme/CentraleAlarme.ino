@@ -1,10 +1,14 @@
 #include <Process.h>
 
-#define pinCapteurVeranda 2
+#define pinCapteurPorteVeranda 5
 #define pinCapteurPorteGarage 3
 #define pinCapteurPorteJardin 4
 
-#define ledDebug 13
+#define ledStatutEnvoiMail 13
+#define ledEtatPorteVeranda 12
+#define ledEtatPorteGarage 11
+#define ledEtatPorteJardin 10
+
 
 #define VERANDA_OUVERTE 1
 #define VERANDA_FERMEE 0
@@ -15,14 +19,14 @@
 #define JARDIN_OUVERT 1
 #define JARDIN_FERME 0
 
-int etatCourantVeranda = VERANDA_FERMEE;
-int etatPrecedentVeranda = VERANDA_FERMEE;
+int etatCourantPorteVeranda = VERANDA_FERMEE;
+int etatPrecedentPorteVeranda = VERANDA_FERMEE;
 
-int etatCourantGarage = GARAGE_FERME;
-int etatPrecedentGarage = GARAGE_FERME;
+int etatCourantPorteGarage = GARAGE_FERME;
+int etatPrecedentPorteGarage = GARAGE_FERME;
 
-int etatCourantJardin = JARDIN_FERME;
-int etatPrecedentJardin = JARDIN_FERME;
+int etatCourantPorteJardin = JARDIN_FERME;
+int etatPrecedentPorteJardin = JARDIN_FERME;
 
 // initialisation du soft
 void setup()
@@ -32,54 +36,113 @@ void setup()
   // initialisation de la communication avec la partie Linux
   Bridge.begin();
   
-  // Initialisation de l'entree du capteur d'ouverture en pull up
-  pinMode(pinCapteurVeranda, INPUT_PULLUP);
+  // Initialisation de l'entree des capteurs d'ouverture en pull up
+  pinMode(pinCapteurPorteVeranda, INPUT_PULLUP);
   pinMode(pinCapteurPorteGarage, INPUT_PULLUP);
   pinMode(pinCapteurPorteJardin, INPUT_PULLUP);
   
-   // utilisation de la led de debug
-  digitalWrite(ledDebug, etatCourantVeranda);
+  pinMode(ledEtatPorteVeranda, OUTPUT);
+  pinMode(ledEtatPorteGarage, OUTPUT);
+  pinMode(ledEtatPorteJardin, OUTPUT);
+
+
 }
 
 // boucle principale
 void loop()
 {
-  // Le changement d'etat de la porte est une opposition entre etatCourantVeranda et etatPrecedentVeranda
-  // etatCourantVeranda = VERANDA_OUVERTE et etatPrecedentVeranda = VERANDA_FERMEE alors on vient d'ouvrir la porte
-  // etatPrecedentVeranda = VERANDA_OUVERTE et  etatCourantVeranda = VERANDA_FERMEE alors on vient de fermer la porte
+  // Le changement d'etat de la porte est une opposition entre etatCourant et etatPrecedent
+  // etatCourant = OUVERT et etatPrecedent = FERME alors on vient d'ouvrir la porte
+  // etatPrecedent = OUVERT et  etatCourant = FERME alors on vient de fermer la porte
   
-  etatCourantVeranda = digitalRead(pinCapteurVeranda);
-  etatCourantJardin = digitalRead(pinCapteurPorteGarage);
-  etatCourantGarage = digitalRead(pinCapteurPorteJardin);
+  etatCourantPorteVeranda = digitalRead(pinCapteurPorteVeranda);
+  etatCourantPorteGarage = digitalRead(pinCapteurPorteGarage);
+  etatCourantPorteJardin = digitalRead(pinCapteurPorteJardin);
+
+  Serial.println("Veranda : " + String(etatCourantPorteVeranda) + " - Garage : " + String(etatCourantPorteGarage) + " - Jardin : " + String(etatCourantPorteJardin));
   
-  // ouverture de la porte, on envoie le mail
-  if(etatCourantVeranda == VERANDA_OUVERTE && etatPrecedentVeranda == VERANDA_FERMEE)
-  {
-      GererOuvertureVeranda();
-      return;
-  }
+  // utilisation de la led de debug pour afficher l etat du capteur
+  digitalWrite(ledEtatPorteVeranda, etatCourantPorteVeranda);
+  digitalWrite(ledEtatPorteGarage, etatCourantPorteGarage);
+  digitalWrite(ledEtatPorteJardin, etatCourantPorteJardin);
 
-//  // fermeture de la porte
-//  if(etatCourantVeranda == VERANDA_FERMEE && etatPrecedentVeranda == VERANDA_OUVERTE)
-//    etatPrecedentVeranda = VERANDA_FERMEE;
+  // Gestion de l'envoi des mails
+  ScruterEtatVeranda();
+  ScruterEtatGarage();
+  ScruterEtatJardin();
+}
 
-  digitalWrite(ledDebug, LOW);
+void ScruterEtatVeranda()
+{
+	if (etatCourantPorteVeranda == VERANDA_OUVERTE && etatPrecedentPorteVeranda == VERANDA_FERMEE)
+	{
+		GererOuvertureVeranda();
+		return;
+	}
+
+	if (etatCourantPorteVeranda != etatPrecedentPorteVeranda)
+		etatPrecedentPorteVeranda = etatCourantPorteVeranda;
 }
 
 // Traitement de l'ouverture de la porte de la veranda
 void GererOuvertureVeranda()
 {
-  // utilisation de la led de debug pour afficher l etat du capteur
-  digitalWrite(ledDebug, etatCourantVeranda);
-  
   Process p;
   // Lancement du script python
   p.begin("/usr/bin/python");
-  p.addParameter("/mnt/sda1/arduino/Alarme.py");
+  p.addParameter("/mnt/sda1/arduino/EnvoyerMailSurOuverturePorteVeranda.py");
   p.run();
   // je considère la porte ouverte lorsque le mail a été envoyé
-  etatPrecedentVeranda = digitalRead(pinCapteurVeranda);
+  etatPrecedentPorteVeranda = digitalRead(pinCapteurPorteVeranda);
   
+  FaireClignoterLaLEDDeDebug();
+}
+
+void ScruterEtatGarage()
+{
+	if (etatCourantPorteGarage == GARAGE_OUVERT && etatPrecedentPorteGarage == GARAGE_FERME)
+	{
+		GererOuvertureGarage();
+		return;
+	}
+
+	if (etatCourantPorteGarage != etatPrecedentPorteGarage)
+		etatPrecedentPorteGarage = etatCourantPorteGarage;
+}
+
+void GererOuvertureGarage()
+{
+  Process p;
+  // Lancement du script python
+  p.begin("/usr/bin/python");
+  p.addParameter("/mnt/sda1/arduino/EnvoyerMailSurOuverturePorteGarage.py");
+  p.run();
+	etatPrecedentPorteGarage = digitalRead(pinCapteurPorteGarage);
+
+  FaireClignoterLaLEDDeDebug();
+}
+
+void ScruterEtatJardin()
+{
+	if (etatCourantPorteJardin == JARDIN_OUVERT && etatPrecedentPorteJardin == JARDIN_FERME)
+	{
+		GererOuvertureJardin();
+		return;
+	}
+
+	if (etatCourantPorteJardin != etatPrecedentPorteJardin)
+		etatPrecedentPorteJardin = etatCourantPorteJardin;
+}
+
+void GererOuvertureJardin()
+{
+  Process p;
+  // Lancement du script python
+  p.begin("/usr/bin/python");
+  p.addParameter("/mnt/sda1/arduino/EnvoyerMailSurOuverturePorteJardin.py");
+  p.run();
+	etatPrecedentPorteJardin = digitalRead(pinCapteurPorteJardin);
+
   FaireClignoterLaLEDDeDebug();
 }
 
@@ -90,7 +153,7 @@ void FaireClignoterLaLEDDeDebug()
   for(int index = 0; index < 5; index++)
   {
     // clignotement de debug pour dire que le mail est parti
-    digitalWrite(ledDebug, !etatLED);
+    digitalWrite(ledStatutEnvoiMail, !etatLED);
     delay(500);
   }
 }

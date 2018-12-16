@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 
 import httplib
 import os
@@ -19,7 +19,7 @@ from time import sleep
 dateDeLAlarme = datetime.datetime.now()  # on recupere la date actuelle
 timestampDeLAlarme = time.mktime(dateDeLAlarme.timetuple())
 
-adresseCamera = "192.168.1.81"
+adresseCamera = "192.168.10.81"
 
 # Creation du repertoire de stockage des images de l'alarme
 repertoire = os.path.join("/mnt/sda1/arduino/Captures", str(timestampDeLAlarme))
@@ -67,10 +67,10 @@ for f in fichiers or []:
 # log sur le serveur de messagerie
 mailserver = smtplib.SMTP('smtp.gmail.com', 587)
 mailserver.starttls()
-mailserver.login('lologar69@gmail.com', 'laur*nt2')
+mailserver.login('maisoncroziergarnier@gmail.com', 'GMACasLo7774IL')
 
-listeDestinataires = ["l.garnier@msc-sgcc.com","ecrozier@wanadoo.fr"]
+listeDestinataires = ["l.garnier@tiama.com","ecrozier@wanadoo.fr"]
 # envoi a tous les destinataires
 for destinataire in listeDestinataires :
-	mailserver.sendmail('lologar69@gmail.com', destinataire, msg.as_string())
+	mailserver.sendmail('maisoncroziergarnier@gmail.com', destinataire, msg.as_string())
 mailserver.quit()
