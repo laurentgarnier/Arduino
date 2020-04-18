@@ -49,8 +49,8 @@ httpServ.close()
 fichiers = os.listdir(repertoire)
 # creation des donnes du mail
 msg = MIMEMultipart()
-msg['From'] = "lologar69@gmail.com"
-msg['To'] = "l.garnier@msc-sgcc.com"
+msg['From'] = "maisoncroziergarnier@gmail.com"
+msg['To'] = "l.garnier@tiama.com"
 msg['Subject'] = "Ouverture de la porte de la veranda"
 
 objetDuMail = "La veranda a ete ouverte"
@@ -67,7 +67,7 @@ for f in fichiers or []:
 # log sur le serveur de messagerie
 mailserver = smtplib.SMTP('smtp.gmail.com', 587)
 mailserver.starttls()
-mailserver.login('maisoncroziergarnier@gmail.com', 'GMACasLo7774IL')
+mailserver.login('maisoncroziergarnier@gmail.com', 'GMAC@s77L*74IL')
 
 listeDestinataires = ["l.garnier@tiama.com","ecrozier@wanadoo.fr"]
 # envoi a tous les destinataires

@@ -1,0 +1,5 @@
+{
+    "sketch": "Sketchs\\DetectionOuverture.ino\\DetectionOuverture.ino.ino",
+    "board": "arduino:avr:yun",
+    "programmer": "AVR ISP"
+}

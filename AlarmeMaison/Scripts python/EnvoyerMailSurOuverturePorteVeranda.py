@@ -67,10 +67,11 @@ for f in fichiers or []:
 # log sur le serveur de messagerie
 mailserver = smtplib.SMTP('smtp.gmail.com', 587)
 mailserver.starttls()
-mailserver.login('maisoncroziergarnier@gmail.com', 'GMACasLo7774IL')
+mailserver.login('maisoncroziergarnier@gmail.com', 'GMAC@s77L*74IL')
 
 listeDestinataires = ["l.garnier@tiama.com","ecrozier@wanadoo.fr"]
 # envoi a tous les destinataires
 for destinataire in listeDestinataires :
 	mailserver.sendmail('maisoncroziergarnier@gmail.com', destinataire, msg.as_string())
 mailserver.quit()
+
